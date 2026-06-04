@@ -1,0 +1,13 @@
+{
+  "name": "explain-flame",
+  "version": "0.1.0",
+  "description": "Turn a Postgres EXPLAIN ANALYZE plan into a flame graph that highlights the slow node and bad row estimates.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": { "test": "vitest run", "build": "tsc -p tsconfig.json" },
+  "keywords": ["postgres", "explain", "performance", "flamegraph", "sql", "query-plan"],
+  "author": "Joshua John <josh202@gmail.com>",
+  "license": "MIT",
+  "devDependencies": { "vitest": "^4.0.0", "typescript": "^5.4.0" }
+}
