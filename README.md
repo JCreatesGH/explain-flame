@@ -17,13 +17,30 @@ npm install explain-flame
 ## Use it
 
 ```ts
-import { parseExplain, renderFlame, slowestNode, rowEstimateMisses } from "explain-flame";
+import { parseExplain, renderFlame, explain, slowestNode, rowEstimateMisses } from "explain-flame";
 
 const plan = parseExplain(explainJson);          // string or parsed JSON
 
 slowestNode(plan).type;                          // "Seq Scan"  ← burns the most self-time
 rowEstimateMisses(plan);                         // nodes where actual rows >> planner estimate
 fs.writeFileSync("plan.svg", renderFlame(plan)); // an SVG flame graph
+
+console.log(explain(plan));                       // a plain-text diagnosis:
+// Total time: 120 ms
+// Slowest node: Seq Scan · orders — 90 ms self (75.0%)
+//
+// Suggestions:
+//   • Seq Scan on orders burns 75.0% of run time — add an index or a more selective filter.
+//   • Planner under-estimates rows on Seq Scan (orders): planned 100, got 5000 — run ANALYZE / check statistics.
+```
+
+## CLI
+
+Installing the package adds an `explain-flame` command:
+
+```bash
+$ psql -XAtc 'EXPLAIN (ANALYZE, FORMAT JSON) SELECT …' | explain-flame > plan.svg
+$ explain-flame plan.json --summary        # text diagnosis instead of SVG
 ```
 
 Generate the input with:
@@ -41,7 +58,7 @@ EXPLAIN (ANALYZE, FORMAT JSON) SELECT ...;
 ## Development
 
 ```bash
-npm install && npm test    # 6 tests
+npm install && npm test    # 10 tests
 npm run build              # tsc, clean
 ```
 

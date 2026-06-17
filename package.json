@@ -5,9 +5,11 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": { "test": "vitest run", "build": "tsc -p tsconfig.json" },
-  "keywords": ["postgres", "explain", "performance", "flamegraph", "sql", "query-plan"],
+  "bin": { "explain-flame": "dist/cli.js" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": { "test": "vitest run", "build": "tsc -p tsconfig.json", "prepare": "npm run build" },
+  "keywords": ["postgres", "explain", "performance", "flamegraph", "sql", "query-plan", "cli"],
   "author": "Joshua John <josh202@gmail.com>",
   "license": "MIT",
-  "devDependencies": { "vitest": "^4.0.0", "typescript": "^5.4.0" }
+  "devDependencies": { "vitest": "^4.0.0", "typescript": "^5.4.0", "@types/node": "^22.19.21" }
 }
