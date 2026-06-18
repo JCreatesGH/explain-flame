@@ -17,6 +17,12 @@ export function rowEstimateMisses(root: PlanNode, factor = 10): PlanNode[] {
   });
 }
 
+/** Sort/hash nodes that spilled to disk (work_mem too low). */
+export function diskSpills(root: PlanNode): PlanNode[] {
+  return flatten(root).filter(
+    (n) => n.sortSpaceType === "Disk" || /external/i.test(n.sortMethod ?? ""));
+}
+
 export function totalTime(root: PlanNode): number {
   return root.totalMs;
 }
@@ -49,6 +55,28 @@ export function diagnose(root: PlanNode): Diagnosis {
     suggestions.push(
       `Planner ${dir} rows on ${m.type}${m.detail ? ` (${m.detail})` : ""}: ` +
       `planned ${m.planRows}, got ${m.actualRows} — run ANALYZE / check statistics.`);
+  }
+  // Sort/hash spilled to disk → work_mem too low.
+  for (const n of diskSpills(root)) {
+    const kb = n.sortSpaceKb ? ` (${n.sortSpaceKb} kB)` : "";
+    suggestions.push(
+      `${n.type}${where(n)} spilled to disk${kb} — raise work_mem so it can sort/hash in memory.`);
+  }
+  // A node executed many times (the inner side of a Nested Loop) that also costs real time.
+  for (const n of flatten(root)) {
+    if (n.loops >= 100 && n.totalMs >= 0.2 * total) {
+      suggestions.push(
+        `${n.type}${where(n)} ran ${n.loops}× for ${n.totalMs}ms total (Nested Loop inner side) — ` +
+        `consider a hash/merge join or an index on the join key.`);
+    }
+  }
+  // Read a lot of rows only to throw most away → filter (or index) earlier.
+  for (const n of flatten(root)) {
+    if (n.rowsRemovedByFilter >= 1000 && n.rowsRemovedByFilter >= 9 * Math.max(1, n.actualRows)) {
+      suggestions.push(
+        `${n.type}${where(n)} read ${n.actualRows + n.rowsRemovedByFilter} rows and filtered out ` +
+        `${n.rowsRemovedByFilter} — add or extend an index so the filter runs earlier.`);
+    }
   }
 
   return {

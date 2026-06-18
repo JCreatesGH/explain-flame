@@ -19,7 +19,8 @@ export function renderFlame(root: PlanNode, width = 800, rowHeight = 26): string
     rects.push(
       `<g><rect x="${r(x)}" y="${y}" width="${r(Math.max(w, 0.5))}" height="${rowHeight}" rx="2" ` +
       `fill="${color(selfFrac)}" stroke="#fff" stroke-width="0.5">` +
-      `<title>${escape(label)} — total ${node.totalMs}ms, rows ${node.actualRows}</title></rect>` +
+      `<title>${escape(label)} — total ${node.totalMs}ms, rows ${node.actualRows}` +
+      `${node.loops > 1 ? `, ×${node.loops} loops` : ""}</title></rect>` +
       (w > 60 ? `<text x="${r(x + 4)}" y="${y + 17}" font-size="11" fill="#1a1a1a" ` +
         `font-family="monospace">${escape(clip(label, w))}</text>` : "") + `</g>`
     );

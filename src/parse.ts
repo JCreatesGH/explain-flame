@@ -7,6 +7,11 @@ export interface PlanNode {
   selfMs: number;          // exclusive time
   planRows: number;
   actualRows: number;
+  loops: number;           // Actual Loops (high = repeated execution / nested-loop inner)
+  rowsRemovedByFilter: number;
+  sortMethod?: string;     // e.g. "quicksort", "external merge"
+  sortSpaceType?: string;  // "Memory" | "Disk"
+  sortSpaceKb?: number;    // Sort Space Used (kB)
   children: PlanNode[];
 }
 
@@ -17,6 +22,10 @@ interface RawPlan {
   "Total Cost"?: number;
   "Plan Rows"?: number;
   "Actual Rows"?: number;
+  "Rows Removed by Filter"?: number;
+  "Sort Method"?: string;
+  "Sort Space Type"?: string;
+  "Sort Space Used"?: number;
   "Relation Name"?: string;
   "Index Name"?: string;
   "Hash Cond"?: string;
@@ -40,6 +49,11 @@ function convert(p: RawPlan): PlanNode {
     selfMs: round(Math.max(0, total - childTotal)),
     planRows: p["Plan Rows"] ?? 0,
     actualRows: p["Actual Rows"] ?? 0,
+    loops,
+    rowsRemovedByFilter: p["Rows Removed by Filter"] ?? 0,
+    sortMethod: p["Sort Method"],
+    sortSpaceType: p["Sort Space Type"],
+    sortSpaceKb: p["Sort Space Used"],
     children,
   };
 }

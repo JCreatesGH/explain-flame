@@ -49,16 +49,19 @@ Generate the input with:
 EXPLAIN (ANALYZE, FORMAT JSON) SELECT ...;
 ```
 
-## Why it's useful
+## What it diagnoses
 
 - **Self-time, not just totals** — Postgres reports cumulative `Actual Total Time`; this computes each node's *exclusive* time (and multiplies by `Actual Loops`), so the flame graph colors the node actually doing the work, not its parent.
-- **Bad-stats finder** — `rowEstimateMisses` flags nodes where actual rows diverge from the estimate by 10×+, the usual root cause of a bad plan.
-- **Just an SVG** — no server, no canvas; the output has `<title>` tooltips per node and embeds anywhere.
+- **Bad-stats finder** — flags nodes where actual rows diverge from the estimate by 10×+, the usual root cause of a bad plan.
+- **Disk spills** — a sort/hash with `Sort Method: external` / `Sort Space Type: Disk` → "raise `work_mem`" (with the spilled size).
+- **Nested-loop blowups** — a node executed hundreds/thousands of times (a Nested Loop inner side) that also costs real time → "use a hash/merge join or an index on the join key".
+- **Low filter selectivity** — a scan that reads many rows and throws most away (`Rows Removed by Filter` ≫ kept) → "index so the filter runs earlier".
+- **Just an SVG** — no server, no canvas; the output has `<title>` tooltips per node (now including loop counts) and embeds anywhere.
 
 ## Development
 
 ```bash
-npm install && npm test    # 10 tests
+npm install && npm test    # 15 tests
 npm run build              # tsc, clean
 ```
 
