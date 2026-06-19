@@ -56,12 +56,14 @@ EXPLAIN (ANALYZE, FORMAT JSON) SELECT ...;
 - **Disk spills** — a sort/hash with `Sort Method: external` / `Sort Space Type: Disk` → "raise `work_mem`" (with the spilled size).
 - **Nested-loop blowups** — a node executed hundreds/thousands of times (a Nested Loop inner side) that also costs real time → "use a hash/merge join or an index on the join key".
 - **Low filter selectivity** — a scan that reads many rows and throws most away (`Rows Removed by Filter` ≫ kept) → "index so the filter runs earlier".
+- **Stale visibility map** — an `Index Only Scan` doing lots of `Heap Fetches` → "VACUUM the table so the scan can skip the heap" (the classic reason index-only scans aren't fast).
+- **Lossy bitmap** — a `Bitmap Heap Scan` with `Lossy Heap Blocks > 0` → "the bitmap exceeded `work_mem` and rechecks every row on those pages; raise `work_mem`".
 - **Just an SVG** — no server, no canvas; the output has `<title>` tooltips per node (now including loop counts) and embeds anywhere.
 
 ## Development
 
 ```bash
-npm install && npm test    # 15 tests
+npm install && npm test    # 18 tests
 npm run build              # tsc, clean
 ```
 

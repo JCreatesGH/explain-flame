@@ -78,6 +78,23 @@ export function diagnose(root: PlanNode): Diagnosis {
         `${n.rowsRemovedByFilter} — add or extend an index so the filter runs earlier.`);
     }
   }
+  // Index Only Scan doing many heap fetches → the visibility map is stale.
+  for (const n of flatten(root)) {
+    if (/index only scan/i.test(n.type) && n.heapFetches >= 1000 &&
+        n.heapFetches >= 0.5 * Math.max(1, n.actualRows)) {
+      suggestions.push(
+        `${n.type}${where(n)} did ${n.heapFetches} heap fetches — the visibility map is stale; ` +
+        `VACUUM the table so the index-only scan can skip the heap.`);
+    }
+  }
+  // Bitmap Heap Scan with lossy blocks → the bitmap didn't fit in work_mem.
+  for (const n of flatten(root)) {
+    if (n.lossyHeapBlocks > 0) {
+      suggestions.push(
+        `${n.type}${where(n)} used ${n.lossyHeapBlocks} lossy heap blocks — the bitmap exceeded ` +
+        `work_mem and rechecks every row on those pages; raise work_mem.`);
+    }
+  }
 
   return {
     totalMs: root.totalMs,

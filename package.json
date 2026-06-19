@@ -1,7 +1,7 @@
 {
   "name": "explain-flame",
-  "version": "0.2.0",
-  "description": "Turn a Postgres EXPLAIN ANALYZE plan into a flame graph + diagnosis: slow node, bad row estimates, disk spills, nested-loop blowups, low-selectivity filters.",
+  "version": "0.3.0",
+  "description": "Turn a Postgres EXPLAIN ANALYZE plan into a flame graph + diagnosis: slow node, bad row estimates, disk spills, nested-loop blowups, low-selectivity filters, stale visibility maps, and lossy bitmaps.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

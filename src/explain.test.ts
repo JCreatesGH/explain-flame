@@ -144,6 +144,34 @@ describe("disk spill / nested-loop / selectivity diagnostics", () => {
   });
 });
 
+describe("heap-fetch and lossy-bitmap diagnostics", () => {
+  it("flags an Index Only Scan with many heap fetches and suggests VACUUM", () => {
+    const root = parseExplain({ Plan: {
+      "Node Type": "Index Only Scan", "Relation Name": "events", "Index Name": "events_ts_idx",
+      "Actual Total Time": 30, "Actual Loops": 1, "Plan Rows": 5000, "Actual Rows": 5000,
+      "Heap Fetches": 5000 } });
+    const n = root;
+    expect(n.heapFetches).toBe(5000);
+    expect(diagnose(root).suggestions.some((s) => /heap fetches/i.test(s) && /VACUUM/.test(s))).toBe(true);
+  });
+
+  it("does not flag an Index Only Scan with few heap fetches", () => {
+    const root = parseExplain({ Plan: {
+      "Node Type": "Index Only Scan", "Relation Name": "events", "Index Name": "events_ts_idx",
+      "Actual Total Time": 5, "Actual Loops": 1, "Plan Rows": 5000, "Actual Rows": 5000,
+      "Heap Fetches": 3 } });
+    expect(diagnose(root).suggestions.some((s) => /heap fetches/i.test(s))).toBe(false);
+  });
+
+  it("flags a Bitmap Heap Scan with lossy blocks and suggests work_mem", () => {
+    const root = parseExplain({ Plan: {
+      "Node Type": "Bitmap Heap Scan", "Relation Name": "events", "Actual Total Time": 40,
+      "Actual Loops": 1, "Plan Rows": 100000, "Actual Rows": 100000, "Lossy Heap Blocks": 1280 } });
+    expect(root.lossyHeapBlocks).toBe(1280);
+    expect(diagnose(root).suggestions.some((s) => /lossy heap blocks/i.test(s) && /work_mem/i.test(s))).toBe(true);
+  });
+});
+
 describe("cli", () => {
   it("renders an SVG by default and a text summary with --summary", () => {
     expect(run([], EXPLAIN).startsWith("<svg")).toBe(true);

@@ -3,6 +3,15 @@
 All notable changes are documented here, following
 [Keep a Changelog](https://keepachangelog.com/) and [SemVer](https://semver.org/).
 
+## [0.3.0]
+
+### Added
+- **Stale-visibility-map diagnosis** — an `Index Only Scan` doing many `Heap Fetches` (≥1000 and
+  ≥50% of rows) → suggests `VACUUM`, the usual reason index-only scans underperform.
+- **Lossy-bitmap diagnosis** — a `Bitmap Heap Scan` with `Lossy Heap Blocks > 0` → suggests
+  raising `work_mem` (the bitmap overflowed and rechecks every row on those pages).
+- Parser now captures `Heap Fetches` and `Lossy Heap Blocks` on `PlanNode`.
+
 ## [0.2.0]
 
 ### Added

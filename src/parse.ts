@@ -12,6 +12,8 @@ export interface PlanNode {
   sortMethod?: string;     // e.g. "quicksort", "external merge"
   sortSpaceType?: string;  // "Memory" | "Disk"
   sortSpaceKb?: number;    // Sort Space Used (kB)
+  heapFetches: number;     // Index Only Scan heap lookups (high = stale visibility map)
+  lossyHeapBlocks: number; // Bitmap Heap Scan lossy blocks (>0 = bitmap exceeded work_mem)
   children: PlanNode[];
 }
 
@@ -26,6 +28,8 @@ interface RawPlan {
   "Sort Method"?: string;
   "Sort Space Type"?: string;
   "Sort Space Used"?: number;
+  "Heap Fetches"?: number;
+  "Lossy Heap Blocks"?: number;
   "Relation Name"?: string;
   "Index Name"?: string;
   "Hash Cond"?: string;
@@ -54,6 +58,8 @@ function convert(p: RawPlan): PlanNode {
     sortMethod: p["Sort Method"],
     sortSpaceType: p["Sort Space Type"],
     sortSpaceKb: p["Sort Space Used"],
+    heapFetches: p["Heap Fetches"] ?? 0,
+    lossyHeapBlocks: p["Lossy Heap Blocks"] ?? 0,
     children,
   };
 }
